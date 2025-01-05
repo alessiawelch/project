@@ -58,7 +58,7 @@ class GNN_TYPE(Enum):
             # The output will be the concatenation of the heads, yielding a vector of size out_dim
             num_heads = 4
             return GATConv(in_dim, out_dim // num_heads, heads=num_heads)
-        elif self in {GNN_TYPE.GSAGE_MEAN, GNN_TYPE.GSAGE_MAX, GNN_TYPE.GSAGE_MIN, GNN_TYPE.GSAGE_POOL, GNN_TYPE.GSAGE_LSTM}:
+        elif self in {GNN_TYPE.GSAGE_MEAN, GNN_TYPE.GSAGE_MAX, GNN_TYPE.GSAGE_MIN, GNN_TYPE.GSAGE_SUM}:
             # Map enum types to aggregation strings
             aggregation_map = {
                 GNN_TYPE.GSAGE_MEAN: "mean",
