@@ -3,7 +3,7 @@ from enum import Enum, auto
 from tasks.dictionary_lookup import DictionaryLookupDataset
 
 from torch import nn
-from torch_geometric.nn import GCNConv, GatedGraphConv, GINConv, GATConv
+from torch_geometric.nn import GCNConv, GatedGraphConv, GINConv, GATConv, SAGEConv
 
 
 class Task(Enum):
@@ -30,6 +30,11 @@ class GNN_TYPE(Enum):
     GGNN = auto()
     GIN = auto()
     GAT = auto()
+    GSAGE_MEAN = auto()  # GraphSAGE with mean aggregation
+    GSAGE_MAX = auto()   # GraphSAGE with max aggregation
+    GSAGE_MIN = auto()   # GraphSAGE with min aggregation
+    GSAGE_SUM = auto()   # GraphSAGE with sum aggregation
+
 
     @staticmethod
     def from_string(s):
@@ -53,6 +58,22 @@ class GNN_TYPE(Enum):
             # The output will be the concatenation of the heads, yielding a vector of size out_dim
             num_heads = 4
             return GATConv(in_dim, out_dim // num_heads, heads=num_heads)
+        elif self in {GNN_TYPE.GSAGE_MEAN, GNN_TYPE.GSAGE_MAX, GNN_TYPE.GSAGE_MIN, GNN_TYPE.GSAGE_POOL, GNN_TYPE.GSAGE_LSTM}:
+            # Map enum types to aggregation strings
+            aggregation_map = {
+                GNN_TYPE.GSAGE_MEAN: "mean",
+                GNN_TYPE.GSAGE_MAX: "max",
+                GNN_TYPE.GSAGE_MIN: "min",
+                GNN_TYPE.GSAGE_SUM: "sum"
+            }
+            aggregation_type = aggregation_map[self]
+            return SAGEConv(
+                in_channels=in_dim,
+                out_channels=out_dim,
+                aggr=aggregation_type
+            )
+        else:
+            raise ValueError("Unsupported GNN type")
 
 
 class STOP(Enum):
