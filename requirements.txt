@@ -4,5 +4,5 @@ torch-geometric>=1.4.2
 torch-scatter>=2.0.4
 torch-sparse>=0.6.0
 torchvision>=0.5.0
-sklearn
+
 
