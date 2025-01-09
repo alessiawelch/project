@@ -23,7 +23,7 @@ class Results:
 if __name__ == '__main__':
 
     task = Task.NEIGHBORS_MATCH
-    gnn_type = GNN_TYPE.GSAGE_MEAN
+    gnn_type = GNN_TYPE.GSAGE_SUM
     stopping_criterion = STOP.TRAIN
     min_depth = 2
     max_depth = 6
