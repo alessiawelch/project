@@ -31,7 +31,7 @@ if __name__ == '__main__':
     results_all_depths = {}
     for depth in range(min_depth, max_depth + 1):
         num_layers = depth + 1
-        args = main.get_fake_args(task=task, depth=depth, num_layers=num_layers, loader_workers=7,
+        args = main.get_fake_args(task=task, depth=depth, num_layers=num_layers, loader_workers=4,
                                   type=gnn_type, stop=stopping_criterion,
                                   no_activation=True, no_residual=False)
         if depth in override_params:
