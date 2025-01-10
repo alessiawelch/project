@@ -1,3 +1,4 @@
+import os
 import torch
 from torch_geometric.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -9,6 +10,8 @@ from attrdict import AttrDict
 from common import STOP
 from models.graph_model import GraphModel
 
+CHECKPOINT_DIR = 'checkpoints'
+SAVE_FREQ = 5000  # Save checkpoint every 5000 "actual" epochs
 
 class Experiment():
     def __init__(self, args):
@@ -36,16 +39,26 @@ class Experiment():
         self.X_train, self.X_test, dim0, out_dim, self.criterion = \
             self.task.get_dataset(self.depth, self.train_fraction)
 
-        self.model = GraphModel(gnn_type=gnn_type, num_layers=num_layers, dim0=dim0, h_dim=self.dim, out_dim=out_dim,
-                                last_layer_fully_adjacent=args.last_layer_fully_adjacent, unroll=args.unroll,
-                                layer_norm=not args.no_layer_norm,
-                                use_activation=not args.no_activation,
-                                use_residual=not args.no_residual
-                                ).to(self.device)
+        self.model = GraphModel(
+            gnn_type=gnn_type,
+            num_layers=num_layers,
+            dim0=dim0,
+            h_dim=self.dim,
+            out_dim=out_dim,
+            last_layer_fully_adjacent=args.last_layer_fully_adjacent,
+            unroll=args.unroll,
+            layer_norm=not args.no_layer_norm,
+            use_activation=not args.no_activation,
+            use_residual=not args.no_residual
+        ).to(self.device)
 
         print(f'Starting experiment')
         self.print_args(args)
         print(f'Training examples: {len(self.X_train)}, test examples: {len(self.X_test)}')
+
+        # Create checkpoint directory if needed
+        if not os.path.exists(CHECKPOINT_DIR):
+            os.makedirs(CHECKPOINT_DIR)
 
     def print_args(self, args):
         if type(args) is AttrDict:
@@ -56,24 +69,49 @@ class Experiment():
                 print(f"{arg}: {getattr(args, arg)}")
         print()
 
-    def run(self):
+    def run(self, resume_checkpoint=None):
+        # Build optimizer and scheduler
         optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
         scheduler = ReduceLROnPlateau(optimizer, mode='max', threshold_mode='abs', factor=0.5, patience=10)
-        print('Starting training')
-
+        
         best_test_acc = 0.0
         best_train_acc = 0.0
         best_epoch = 0
         epochs_no_improve = 0
-        for epoch in range(1, (self.max_epochs // self.eval_every) + 1):
+        start_epoch = 1  # For resuming training from a checkpoint
+
+        # If we have a checkpoint to resume from, load states
+        if resume_checkpoint is not None:
+            checkpoint = torch.load(resume_checkpoint, map_location=self.device)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            best_test_acc = checkpoint['best_test_acc']
+            best_train_acc = checkpoint['best_train_acc']
+            best_epoch = checkpoint['best_epoch']
+            epochs_no_improve = checkpoint['epochs_no_improve']
+            start_epoch = checkpoint['epoch'] + 1  # continue from next epoch
+            print(f"Resuming training from epoch {checkpoint['epoch']}, best_test_acc={best_test_acc}, best_train_acc={best_train_acc}")
+
+        print('Starting training')
+        
+        # The main loop – note that each iteration uses `eval_every` epochs of data
+        # so the "actual" epoch (in a typical sense) is `epoch * self.eval_every`
+        for epoch in range(start_epoch, (self.max_epochs // self.eval_every) + 1):
             self.model.train()
-            loader = DataLoader(self.X_train * self.eval_every, batch_size=self.batch_size, shuffle=True,
-                                pin_memory=True, num_workers=self.loader_workers)
+            loader = DataLoader(
+                self.X_train * self.eval_every,
+                batch_size=self.batch_size,
+                shuffle=True,
+                pin_memory=True,
+                num_workers=self.loader_workers
+            )
 
             total_loss = 0
             total_num_examples = 0
             train_correct = 0
             optimizer.zero_grad()
+
             for i, batch in enumerate(loader):
                 batch = batch.to(self.device)
                 out = self.model(batch)
@@ -83,6 +121,7 @@ class Experiment():
                 _, train_pred = out.max(dim=1)
                 train_correct += train_pred.eq(batch.y).sum().item()
 
+                # Gradient accumulation
                 loss = loss / self.accum_grad
                 loss.backward()
                 if (i + 1) % self.accum_grad == 0:
@@ -93,12 +132,14 @@ class Experiment():
             train_acc = train_correct / total_num_examples
             scheduler.step(train_acc)
 
+            # Evaluate
             test_acc = self.eval()
             cur_lr = [g["lr"] for g in optimizer.param_groups]
 
             new_best_str = ''
             stopping_threshold = 0.0001
             stopping_value = 0
+
             if self.stopping_criterion is STOP.TEST:
                 if test_acc > best_test_acc + stopping_threshold:
                     best_test_acc = test_acc
@@ -119,23 +160,55 @@ class Experiment():
                     new_best_str = ' (new best train)'
                 else:
                     epochs_no_improve += 1
+
+            # "Actual" epoch in normal sense = epoch * self.eval_every
+            actual_epoch = epoch * self.eval_every
             print(
-                f'Epoch {epoch * self.eval_every}, LR: {cur_lr}: Train loss: {avg_training_loss:.7f}, Train acc: {train_acc:.4f}, Test accuracy: {test_acc:.4f}{new_best_str}')
+                f'Epoch {actual_epoch}, LR: {cur_lr}: '
+                f'Train loss: {avg_training_loss:.7f}, '
+                f'Train acc: {train_acc:.4f}, '
+                f'Test accuracy: {test_acc:.4f}{new_best_str}'
+            )
+
+            # ===== SAVE CHECKPOINT EVERY 5000 ACTUAL EPOCHS =====
+            if actual_epoch % SAVE_FREQ == 0:
+                checkpoint_path = os.path.join(CHECKPOINT_DIR, f'checkpoint_epoch_{actual_epoch}.pt')
+                torch.save({
+                    'epoch': epoch,
+                    'actual_epoch': actual_epoch,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'scheduler_state_dict': scheduler.state_dict(),
+                    'best_test_acc': best_test_acc,
+                    'best_train_acc': best_train_acc,
+                    'best_epoch': best_epoch,
+                    'epochs_no_improve': epochs_no_improve
+                }, checkpoint_path)
+                print(f"Checkpoint saved at epoch {actual_epoch} -> {checkpoint_path}")
+
+            # Early stopping checks
             if stopping_value == 1.0:
                 break
             if epochs_no_improve >= self.patience:
                 print(
-                    f'{self.patience} * {self.eval_every} epochs without {self.stopping_criterion} improvement, stopping. ')
+                    f'{self.patience} * {self.eval_every} epochs without '
+                    f'{self.stopping_criterion} improvement, stopping.'
+                )
                 break
-        print(f'Best train acc: {best_train_acc}, epoch: {best_epoch * self.eval_every}')
 
+        print(f'Best train acc: {best_train_acc}, epoch: {best_epoch * self.eval_every}')
         return best_train_acc, best_test_acc, best_epoch
 
     def eval(self):
         self.model.eval()
         with torch.no_grad():
-            loader = DataLoader(self.X_test, batch_size=self.batch_size, shuffle=False,
-                                pin_memory=True, num_workers=self.loader_workers)
+            loader = DataLoader(
+                self.X_test,
+                batch_size=self.batch_size,
+                shuffle=False,
+                pin_memory=True,
+                num_workers=self.loader_workers
+            )
 
             total_correct = 0
             total_examples = 0
