@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_activation', action='store_true')
     parser.add_argument('--no_residual', action='store_true')
     parser.add_argument('--unroll', action='store_true', help='use the same weights across GNN layers')
+    parser.add_argument("--resume_checkpoint", dest="resume_checkpoint", default=None, type=str, help="Path to the checkpoint file to resume training")
 
     args = parser.parse_args()
     Experiment(args).run()
