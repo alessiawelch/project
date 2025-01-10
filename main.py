@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument("--resume_checkpoint", dest="resume_checkpoint", default=None, type=str, help="Path to the checkpoint file to resume training")
 
     args = parser.parse_args()
-    Experiment(args).run()
+    Experiment(args).run(resume_checkpoint=args.resume_checkpoint)
 
 
 def get_fake_args(
