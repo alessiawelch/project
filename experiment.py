@@ -11,7 +11,7 @@ from common import STOP
 from models.graph_model import GraphModel
 
 CHECKPOINT_DIR = 'checkpoints'
-SAVE_FREQ = 2000  # Save checkpoint every 2000 "actual" epochs
+SAVE_FREQ = 1000  # Save checkpoint every 2000 "actual" epochs
 
 class Experiment():
     def __init__(self, args):
