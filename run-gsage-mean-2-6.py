@@ -25,8 +25,8 @@ if __name__ == '__main__':
     task = Task.NEIGHBORS_MATCH
     gnn_type = GNN_TYPE.GSAGE_MEAN
     stopping_criterion = STOP.TRAIN
-    min_depth = 5
-    max_depth = 5
+    min_depth = 3
+    max_depth = 3
 
     results_all_depths = {}
     for depth in range(min_depth, max_depth + 1):
