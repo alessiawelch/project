@@ -186,13 +186,13 @@ class GNN_TYPE(Enum):
             # Or 'mean' / 'max' — choose whichever local aggregator you prefer.
         elif self is GNN_TYPE.GSAGE_GATED_HYBRID_MAX:
             # Return our custom Hybrid aggregator
-            return HybridSAGEConv(in_dim, out_dim, local_aggr='max')
+            return GatingHybridSAGEConv(in_dim, out_dim, local_aggr='max')
         elif self is GNN_TYPE.GSAGE_GATED_HYBRID_MEAN:
             # Return our custom Hybrid aggregator
-            return HybridSAGEConv(in_dim, out_dim, local_aggr='mean')
+            return GatingHybridSAGEConv(in_dim, out_dim, local_aggr='mean')
         elif self is GNN_TYPE.GSAGE_GATED_HYBRID_SUM:
             # Return our custom Hybrid aggregator
-            return HybridSAGEConv(in_dim, out_dim, local_aggr='sum')
+            return GatingHybridSAGEConv(in_dim, out_dim, local_aggr='sum')
         else:
             raise ValueError("Unsupported GNN type")
 
