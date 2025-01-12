@@ -140,7 +140,7 @@ class GNN_TYPE(Enum):
     GSAGE_HYBRID = auto()
     GSAGE_GATED_HYBRID_SUM = auto()
     GSAGE_GATED_HYBRID_MAX = auto()
-    GSAGE_GATED_HYBRID_SUM = auto()
+    GSAGE_GATED_HYBRID_MEAN = auto()
     
 
 
