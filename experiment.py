@@ -31,7 +31,7 @@ class Experiment():
         self.stopping_criterion = args.stop
         self.patience = args.patience
 
-        seed = 13 // 11
+        seed = 11
         torch.manual_seed(seed)
         np.random.seed(seed)
         random.seed(seed)
