@@ -4,6 +4,24 @@ from tasks.dictionary_lookup import DictionaryLookupDataset
 
 from torch import nn
 from torch_geometric.nn import GCNConv, GatedGraphConv, GINConv, GATConv, SAGEConv
+        
+class Task(Enum):
+    NEIGHBORS_MATCH = auto()
+
+    @staticmethod
+    def from_string(s):
+        try:
+            return Task[s]
+        except KeyError:
+            raise ValueError()
+
+    def get_dataset(self, depth, train_fraction):
+        if self is Task.NEIGHBORS_MATCH:
+            dataset = DictionaryLookupDataset(depth)
+        else:
+            dataset = None
+
+        return dataset.generate_data(train_fraction)
 
 class HybridSAGEConv(SAGEConv):
     """
@@ -38,25 +56,6 @@ class HybridSAGEConv(SAGEConv):
         #out = F.relu(out)                               # optional nonlinearity
         return out
         
-class Task(Enum):
-    NEIGHBORS_MATCH = auto()
-
-    @staticmethod
-    def from_string(s):
-        try:
-            return Task[s]
-        except KeyError:
-            raise ValueError()
-
-    def get_dataset(self, depth, train_fraction):
-        if self is Task.NEIGHBORS_MATCH:
-            dataset = DictionaryLookupDataset(depth)
-        else:
-            dataset = None
-
-        return dataset.generate_data(train_fraction)
-
-
 class GNN_TYPE(Enum):
     GCN = auto()
     GGNN = auto()
