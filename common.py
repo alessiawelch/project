@@ -108,7 +108,7 @@ class GNN_TYPE(Enum):
             )
         elif self is GNN_TYPE.GSAGE_HYBRID:
             # Return our custom Hybrid aggregator
-            return HybridSAGEConv(in_dim, out_dim, local_aggr='max')  
+            return HybridSAGEConv(in_dim, out_dim, local_aggr='sum')  
             # Or 'mean' / 'max' — choose whichever local aggregator you prefer.
         else:
             raise ValueError("Unsupported GNN type")
