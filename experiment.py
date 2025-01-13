@@ -132,14 +132,11 @@ class Experiment():
             train_acc = train_correct / total_num_examples
             scheduler.step(train_acc)
 
-
-            total_weight = self.model.weight_max + self.model.weight_sum
-            normalized_weight_max = self.model.weight_max / total_weight
-            normalized_weight_sum = self.model.weight_sum / total_weight
-            print(
-                "Epoch {epoch}: Normalized weights - "
-                f"max = {normalized_weight_max.item()}, sum = {normalized_weight_sum.item()}"
-            )               
+            # Print all named parameters
+            for name, param in self.model.named_parameters():
+                if 'weight_max' in name or 'weight_sum' in name:
+                    print(f"{name}: {param.item()}")
+       
             # Evaluate
             test_acc = self.eval()
             cur_lr = [g["lr"] for g in optimizer.param_groups]
