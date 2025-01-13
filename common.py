@@ -52,6 +52,9 @@ class MaxSumSAGEConv(SAGEConv):
         if self.combine_mode == 'average':
             out = 0.5 * (out_max + out_sum)
         elif self.combine_mode == 'concat':
+            min_size = min(out_max.size(0), out_sum.size(0))
+            out_max = out_max[:min_size]
+            out_sum = out_sum[:min_size]
             # Handle dimension mismatch for concatenation
             print(out_max.size(-1))
             print(out_sum.size(-1))
