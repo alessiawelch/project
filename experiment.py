@@ -134,6 +134,7 @@ class Experiment():
 
             # Print all named parameters
             for name, param in self.model.named_parameters():
+                print(name)
                 if 'weight_max' in name or 'weight_sum' in name:
                     print(f"{name}: {param.item()}")
        
