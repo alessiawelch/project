@@ -136,6 +136,7 @@ class Experiment():
             for name, param in self.model.named_parameters():
                 if 'weight_max' in name or 'weight_sum' in name:
                     print(f"{name}: {param.item()}")
+                    print(param.item.requires_grad)
        
             # Evaluate
             test_acc = self.eval()
