@@ -30,8 +30,8 @@ class MaxSumSAGEConv(SAGEConv):
         super().__init__(in_channels, out_channels, aggr='max', **kwargs)
         self.combine_mode = combine_mode
         if self.combine_mode == 'learnable':
-        self.weight_max = torch.nn.Parameter(torch.tensor(0.5, requires_grad=True))
-        self.weight_sum = torch.nn.Parameter(torch.tensor(0.5, requires_grad=True))
+                self.weight_max = torch.nn.Parameter(torch.tensor(0.5, requires_grad=True))
+                self.weight_sum = torch.nn.Parameter(torch.tensor(0.5, requires_grad=True))
 
     def forward(self, x, edge_index, size=None):
         # Save the old aggregation method
