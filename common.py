@@ -72,9 +72,6 @@ class MaxSumSAGEConv(SAGEConv):
             normalized_weight_max = self.weight_max / total_weight
             normalized_weight_sum = self.weight_sum / total_weight
 
-            # Print the normalized weights
-            print(f"Normalized weights: max = {normalized_weight_max.item()}, sum = {normalized_weight_sum.item()}")
-
             # Combine outputs using normalized weights
             out = normalized_weight_max * out_max + normalized_weight_sum * out_sum
         else:
