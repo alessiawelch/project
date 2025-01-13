@@ -29,22 +29,51 @@ class MaxSumSAGEConv(SAGEConv):
     def __init__(self, in_channels, out_channels, combine_mode='average', **kwargs):
         super().__init__(in_channels, out_channels, aggr='max', **kwargs)
         self.combine_mode = combine_mode
+        if self.combine_mode == 'learnable':
+        self.weight_max = torch.nn.Parameter(torch.tensor(0.5, requires_grad=True))
+        self.weight_sum = torch.nn.Parameter(torch.tensor(0.5, requires_grad=True))
 
     def forward(self, x, edge_index, size=None):
+        # Save the old aggregation method
         old_aggr = self.aggr
-            
+        
+        # Perform 'max' aggregation
         self.aggr = 'max'
         out_max = super().forward(x, edge_index, size=size)
 
+        # Perform 'sum' aggregation
         self.aggr = 'sum'
         out_sum = super().forward(x, edge_index, size=size)
 
+        # Restore the old aggregation method
         self.aggr = old_aggr
 
+        # Combine outputs based on the mode
         if self.combine_mode == 'average':
             out = 0.5 * (out_max + out_sum)
         elif self.combine_mode == 'concat':
+            # Handle dimension mismatch for concatenation
+            if out_max.size(-1) != out_sum.size(-1):
+                diff = out_max.size(-1) - out_sum.size(-1)
+                if diff > 0:
+                    out_sum = F.pad(out_sum, (0, diff))  # Pad out_sum to match out_max
+                elif diff < 0:
+                    out_max = F.pad(out_max, (0, -diff))  # Pad out_max to match out_sum
+            # Concatenate the aligned tensors
             out = torch.cat([out_max, out_sum], dim=-1)
+        elif self.combine_mode == 'learnable':
+            # Normalize the learnable weights
+            total_weight = self.weight_max + self.weight_sum
+            normalized_weight_max = self.weight_max / total_weight
+            normalized_weight_sum = self.weight_sum / total_weight
+
+            # Print the normalized weights
+            print(f"Normalized weights: max = {normalized_weight_max.item()}, sum = {normalized_weight_sum.item()}")
+
+            # Combine outputs using normalized weights
+            out = normalized_weight_max * out_max + normalized_weight_sum * out_sum
+        else:
+            raise ValueError(f"Unknown combine_mode: {self.combine_mode}")
 
         return out
             
