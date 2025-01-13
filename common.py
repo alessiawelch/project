@@ -53,6 +53,8 @@ class MaxSumSAGEConv(SAGEConv):
             out = 0.5 * (out_max + out_sum)
         elif self.combine_mode == 'concat':
             # Handle dimension mismatch for concatenation
+            print(out_max.size(-1))
+            print(out_sum.size(-1))
             if out_max.size(-1) != out_sum.size(-1):
                 diff = out_max.size(-1) - out_sum.size(-1)
                 if diff > 0:
