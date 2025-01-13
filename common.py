@@ -146,7 +146,7 @@ class GNN_TYPE(Enum):
             # Return our custom Hybrid aggregator
             return GatingHybridSAGEConv(in_dim, out_dim, local_aggr='sum')
         elif self is GNN_TYPE.GSAGE_MAXSUM:
-            return MaxSumSAGEConv(in_dim, out_dim, combine_mode='learnable')
+            return MaxSumSAGEConv(in_dim, out_dim, combine_mode='average')
         else:
             raise ValueError("Unsupported GNN type")
 
