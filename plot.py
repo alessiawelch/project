@@ -19,6 +19,7 @@ plt.plot(depths, mean_acc, marker='o', label='Mean Aggregator')
 plt.plot(depths, max_acc,  marker='s', label='Max Aggregator')
 plt.plot(depths, sum_acc,  marker='^', label='Sum Aggregator')
 
+plt.xticks(depths)  # Set x-axis ticks to integers only
 plt.xlabel('Depth (r)')
 plt.ylabel('Training Accuracy')
 plt.title('Training Accuracy vs. Depth')
@@ -34,6 +35,7 @@ plt.plot(depths, mean_epoch, marker='o', label='Mean Aggregator')
 plt.plot(depths, max_epoch,  marker='s', label='Max Aggregator')
 plt.plot(depths, sum_epoch,  marker='^', label='Sum Aggregator')
 
+plt.xticks(depths)  # Set x-axis ticks to integers only
 plt.xlabel('Depth (r)')
 plt.ylabel('Epochs')
 plt.title('Epochs vs. Depth')
