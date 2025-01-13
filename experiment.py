@@ -132,15 +132,14 @@ class Experiment():
             train_acc = train_correct / total_num_examples
             scheduler.step(train_acc)
 
-            if hasattr(self.model, 'weight_max') and hasattr(self.model, 'weight_sum'):
-                total_weight = self.model.weight_max + self.model.weight_sum
-                normalized_weight_max = self.model.weight_max / total_weight
-                normalized_weight_sum = self.model.weight_sum / total_weight
-                print(
-                    f"Epoch {epoch}: Normalized weights - "
-                    f"max = {normalized_weight_max.item()}, sum = {normalized_weight_sum.item()}"
-                )
-                
+
+            total_weight = self.model.weight_max + self.model.weight_sum
+            normalized_weight_max = self.model.weight_max / total_weight
+            normalized_weight_sum = self.model.weight_sum / total_weight
+            print(
+                "Epoch {epoch}: Normalized weights - "
+                f"max = {normalized_weight_max.item()}, sum = {normalized_weight_sum.item()}"
+            )               
             # Evaluate
             test_acc = self.eval()
             cur_lr = [g["lr"] for g in optimizer.param_groups]
