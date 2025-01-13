@@ -1,25 +1,5 @@
 import matplotlib.pyplot as plt
 
-#-------------------------------------------------
-# Data from your table (adjust as needed):
-# model   depth   training rate (accuracy)   epoch
-# mean    2       1.0                        20000
-# mean    3       0.71828125                 50000
-# mean    4       0.9114882813               50000
-# mean    5       0.04561328125              4600
-# mean    6       0.02914                    3500
-# max     2       1.0                        2000
-# max     3       1.0                        500
-# max     4       1.0                        5700
-# max     5       0.27                       38400
-# max     6       0.2046023438               30300
-# sum     2       1.0                        19000
-# sum     3       1.0                        11000
-# sum     4       0.68                       50000
-# sum     5       0.3491                     50000
-# sum     6       0.1254277                  50000
-#-------------------------------------------------
-
 # Depth values:
 depths = [2, 3, 4, 5, 6]
 
@@ -45,6 +25,7 @@ plt.title('Training Accuracy vs. Depth')
 plt.grid(True)
 plt.legend()
 plt.tight_layout()
+plt.savefig('training_accuracy_vs_depth.png')  # Save the plot as a PNG file
 plt.show()
 
 #------------------- PLOT 2: Epochs vs. Depth -----------------------#
@@ -59,4 +40,5 @@ plt.title('Epochs vs. Depth')
 plt.grid(True)
 plt.legend()
 plt.tight_layout()
+plt.savefig('epochs_vs_depth.png')  # Save the plot as a PNG file
 plt.show()
