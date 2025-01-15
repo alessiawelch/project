@@ -26,7 +26,7 @@ if __name__ == '__main__':
     gnn_type = GNN_TYPE.GSAGE_MAXSUM
     stopping_criterion = STOP.TRAIN
     min_depth = 2
-    max_depth = 4
+    max_depth = 6
 
     results_all_depths = {}
     for depth in range(min_depth, max_depth + 1):

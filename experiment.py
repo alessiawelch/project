@@ -11,7 +11,7 @@ from common import STOP
 from models.graph_model import GraphModel
 
 CHECKPOINT_DIR = 'checkpoints'
-SAVE_FREQ = 1000  # Save checkpoint every 2000 "actual" epochs
+SAVE_FREQ = 1000 
 
 class Experiment():
     def __init__(self, args):
@@ -56,7 +56,6 @@ class Experiment():
         self.print_args(args)
         print(f'Training examples: {len(self.X_train)}, test examples: {len(self.X_test)}')
 
-        # Create checkpoint directory if needed
         if not os.path.exists(CHECKPOINT_DIR):
             os.makedirs(CHECKPOINT_DIR)
 
@@ -70,7 +69,6 @@ class Experiment():
         print()
 
     def run(self, resume_checkpoint=None):
-        # Build optimizer and scheduler
         optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
         scheduler = ReduceLROnPlateau(optimizer, mode='max', threshold_mode='abs', factor=0.5, patience=10)
         
@@ -78,9 +76,9 @@ class Experiment():
         best_train_acc = 0.0
         best_epoch = 0
         epochs_no_improve = 0
-        start_epoch = 1  # For resuming training from a checkpoint
+        start_epoch = 1  
 
-        # If we have a checkpoint to resume from, load states
+        # if we have a checkpoint, load states from the checkpoint
         if resume_checkpoint is not None:
             checkpoint = torch.load(resume_checkpoint, map_location=self.device)
             self.model.load_state_dict(checkpoint['model_state_dict'])
@@ -90,13 +88,11 @@ class Experiment():
             best_train_acc = checkpoint['best_train_acc']
             best_epoch = checkpoint['best_epoch']
             epochs_no_improve = checkpoint['epochs_no_improve']
-            start_epoch = checkpoint['epoch'] + 1  # continue from next epoch
+            start_epoch = checkpoint['epoch'] + 1 
             print(f"Resuming training from epoch {checkpoint['epoch']}, best_test_acc={best_test_acc}, best_train_acc={best_train_acc}")
 
         print('Starting training')
         
-        # The main loop – note that each iteration uses `eval_every` epochs of data
-        # so the "actual" epoch (in a typical sense) is `epoch * self.eval_every`
         for epoch in range(start_epoch, (self.max_epochs // self.eval_every) + 1):
             self.model.train()
             loader = DataLoader(
@@ -121,7 +117,6 @@ class Experiment():
                 _, train_pred = out.max(dim=1)
                 train_correct += train_pred.eq(batch.y).sum().item()
 
-                # Gradient accumulation
                 loss = loss / self.accum_grad
                 loss.backward()
                 if (i + 1) % self.accum_grad == 0:
@@ -132,13 +127,6 @@ class Experiment():
             train_acc = train_correct / total_num_examples
             scheduler.step(train_acc)
 
-            # Print all named parameters
-            for name, param in self.model.named_parameters():
-                if 'weight_max' in name or 'weight_sum' in name:
-                    print(f"{name}: {param.item()}")
-                    print(param.item.requires_grad)
-       
-            # Evaluate
             test_acc = self.eval()
             cur_lr = [g["lr"] for g in optimizer.param_groups]
 
@@ -167,7 +155,6 @@ class Experiment():
                 else:
                     epochs_no_improve += 1
 
-            # "Actual" epoch in normal sense = epoch * self.eval_every
             actual_epoch = epoch * self.eval_every
             print(
                 f'Epoch {actual_epoch}, LR: {cur_lr}: '
@@ -176,7 +163,7 @@ class Experiment():
                 f'Test accuracy: {test_acc:.4f}{new_best_str}'
             )
 
-            # ===== SAVE CHECKPOINT EVERY 5000 ACTUAL EPOCHS =====
+            # ===== SAVE CHECKPOINT EVERY 1000 ACTUAL EPOCHS =====
             if actual_epoch % SAVE_FREQ == 0:
                 checkpoint_path = os.path.join(CHECKPOINT_DIR, f'checkpoint_epoch_{actual_epoch}.pt')
                 torch.save({
@@ -192,7 +179,6 @@ class Experiment():
                 }, checkpoint_path)
                 print(f"Checkpoint saved at epoch {actual_epoch} -> {checkpoint_path}")
 
-            # Early stopping checks
             if stopping_value == 1.0:
                 break
             if epochs_no_improve >= self.patience:
