@@ -5,4 +5,4 @@ A summarized PDF of the results is available in **`results_compiled.pdf`**. For 
 
 ### Acknowledgments
 
-This codebase incorporates code and ideas from the [Bottleneck repository](https://github.com/tech-srl/bottleneck). We appreciate their contribution.
+This codebase was originally forked from [Bottleneck repository](https://github.com/tech-srl/bottleneck). We appreciate their contribution.
